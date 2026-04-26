@@ -7,6 +7,45 @@ from app.schemas.vacancy_base import Vacancy
 
 from app.database.base import Base
 
+def _fix_list(val):
+    """
+    Парсит поле-список из CSV.
+    Поддерживает:
+    - '["a", "b"]' (JSON)
+    - "['a', 'b']" (Python literal)
+    - "a, b, c" (CSV-строка)
+    - "" / None / [] → []
+    """
+    # 1. Пустые значения
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return []
+    if isinstance(val, list):
+        return val  # уже список → возвращаем как есть
+    
+    # 2. Строка → чистим
+    if not isinstance(val, str):
+        return []
+    val = val.strip()
+    if val in ('[]', '""', "''", ''):
+        return []
+    
+    # 3. Пробуем JSON
+    if val.startswith('['):
+        try:
+            return json.loads(val)
+        except json.JSONDecodeError:
+            pass
+    
+    # 4. Пробуем Python literal (ast)
+    try:
+        parsed = ast.literal_eval(val)
+        if isinstance(parsed, list):
+            return parsed
+    except (ValueError, SyntaxError):
+        pass
+    
+    # 5. Фоллбэк: просто сплит по запятой (твой случай)
+    return [x.strip() for x in val.split(',') if x.strip()]
 
 def read_csv_safe(file_path: str, delimiter: str = ','):
     for enc in ['utf-8-sig', 'utf-8', 'cp1251', 'latin1']:
@@ -34,14 +73,15 @@ def _fix_json(val):
         except (ValueError, SyntaxError):
             return []
 
-def load_csv(file: str, model, json_cols: list[str] | None = None, delimiter: str = ','):
+def load_csv(file: str, model, list_cols: list[str] | None = None, delimiter: str = ','):
     print(f"⏳ Читаю {file}...")
     df = read_csv_safe(file, delimiter)
 
-    if json_cols:
-        for col in json_cols:
+    # Парсим списки (skills, actions_history)
+    if list_cols:
+        for col in list_cols:
             if col in df.columns:
-                df[col] = df[col].apply(_fix_json)
+                df[col] = df[col].apply(_fix_list)
 
     # Парсим даты
     date_cols = [c for c in df.columns if '_at' in c or c in ('created_at', 'updated_at', 'time', 'date')]
@@ -72,7 +112,7 @@ def load_csv(file: str, model, json_cols: list[str] | None = None, delimiter: st
         raise
     finally:
         db.close()
-
+        
 if __name__ == "__main__":
     print("🚀 Запуск импорта...")
     
@@ -80,6 +120,6 @@ if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
     print("🚀 Запуск импорта...")
     # Укажи свои пути к CSV
-    load_csv("scripts/cand.csv", Candidate, json_cols=["skills", "actions_history"])
+    load_csv("scripts/cand.csv", Candidate, list_cols=["skills", "actions_history"])
     load_csv("scripts/vac.csv", Vacancy, delimiter=';')
     print("🏁 Готово. База заполнена.")
