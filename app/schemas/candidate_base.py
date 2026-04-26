@@ -4,7 +4,7 @@ from sqlalchemy import Text, JSON, Integer, Double
 
 
 class Candidate(Base):
-    __tablename__ = "Candidates"
+    __tablename__ = "сandidates"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     resume: Mapped[str] = mapped_column(Text, nullable=True, deferred=True)
