@@ -40,6 +40,6 @@ class Vacancy(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "status IN ('Active', 'Archieved')", name="ck_candidate_status"
+            "status IN ('Активная', 'Архивная')", name="ck_vacancy_status" 
         ),
     )
