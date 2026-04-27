@@ -1,20 +1,4 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
-
-class HabrArticle(BaseModel):
-    title: str
-    url: str
-
-class CtaButton(BaseModel):
-    text: str
-    style: str
-    icon: str
-    search_query: Optional[str] = None
-
-class AlternativeVacancy(BaseModel):
-    title: str
-    url: str
-
 
 
 class RelatedRole(BaseModel):
@@ -50,26 +34,18 @@ class ResumeAdviceRequest(BaseModel):
         default=None,
         description="ID кандидата, если нужно взять resume из базы.",
     )
-    vacancy_id: int
     target_role: str | None = Field(default=None, description="Желаемая роль кандидата")
 
-class RoadmapStep(BaseModel):
-    step: int
-    title: str
-    description: str
 
 class ResumeAdviceData(BaseModel):
     summary: str
-    score: int
-    metrics: Dict[str, int]
-    matched_skills: List[str]
-    missing_skills: List[str]
-    history_insight: Optional[str] = None
-    ctas: List[CtaButton]
-    habr_article: Optional[HabrArticle] = None
-    alternative_vacancies: Optional[List[AlternativeVacancy]] = None
-    suggest_referral: bool
-    career_roadmap: Optional[List[RoadmapStep]] = None
+    strengths: list[str]
+    gaps: list[str]
+    recommended_searches: list[str]
+    related_roles: list[RelatedRole]
+    frontend: ResumeAdviceFrontend
+    model: str
+    provider: str
 
 
 class ErrorPayload(BaseModel):
