@@ -29,6 +29,19 @@ class FrontendLink(BaseModel):
     query: str
     url: str
 
+class Achievement(BaseModel):
+    title: str
+    description: str
+    icon: str
+
+class MissingSkillDetail(BaseModel):
+    skill: str
+    reason: str
+
+class MissingSkillsCategorized(BaseModel):
+    critical: List[MissingSkillDetail] = []
+    growth: List[MissingSkillDetail] = []
+
 
 class FrontendSection(BaseModel):
     title: str
@@ -70,6 +83,10 @@ class ResumeAdviceData(BaseModel):
     alternative_vacancies: Optional[List[AlternativeVacancy]] = None
     suggest_referral: bool
     career_roadmap: Optional[List[RoadmapStep]] = None
+    achievements: Optional[List[Achievement]] = None
+    locked_achievements: Optional[List[Achievement]] = None
+    missing_skills: MissingSkillsCategorized
+
 
 
 class ErrorPayload(BaseModel):
