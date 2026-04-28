@@ -4,6 +4,8 @@ from typing import Optional, List, Dict, Any
 class HabrArticle(BaseModel):
     title: str
     url: str
+    reason: str 
+    
 
 class CtaButton(BaseModel):
     text: str
