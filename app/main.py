@@ -14,7 +14,7 @@ import os
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(...)
+    app = FastAPI(title=settings.PROJECT_NAME, docs_url="/docs", redoc_url=None)
     
     # 1. Подключаем API роутеры (как и было)
     app.include_router(candidates_router, prefix=settings.API_PREFIX)
