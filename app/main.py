@@ -7,22 +7,31 @@ from app.database.base import Base
 from app.database.session import engine
 from app.exceptions import AppException
 from app.routers.analyze import router as analyze_router 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
+
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title=settings.PROJECT_NAME, docs_url="/docs", redoc_url=None)
-
-    # Авто-миграция для MVP
-    Base.metadata.create_all(bind=engine)
-
+    app = FastAPI(...)
+    
+    # 1. Подключаем API роутеры (как и было)
     app.include_router(candidates_router, prefix=settings.API_PREFIX)
     app.include_router(vacancies_router, prefix=settings.API_PREFIX)
     app.include_router(analyze_router, prefix=settings.API_PREFIX)
 
-    @app.exception_handler(AppException)
-    async def app_exception_handler(request: Request, exc: AppException):
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
-
+    # 2. ДОБАВЛЯЕМ: Раздача статики (папка dist)
+    # Важно: это должно быть ПОСЛЕ API роутеров
+    if os.path.exists("dist"):
+        app.mount("/assets", StaticFiles(directory="dist/assets"), name="static")
+        
+        @app.get("/{full_path:path}")
+        async def serve_frontend(full_path: str):
+            # Если запрос не к API, отдаем index.html нашего фронтенда
+            return FileResponse("dist/index.html")
+            
     return app
+
 
 app = create_app()
